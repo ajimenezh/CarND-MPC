@@ -92,6 +92,23 @@ int main() {
           double psi = j[1]["psi"];
           double v = j[1]["speed"];
 
+          Eigen::VectorXd ptsx2(ptsx.size());
+          for (int i=0; i<ptsx.size(); i++) {
+              ptsx2[i] = ptsx[i];
+          }
+
+          Eigen::VectorXd ptsy2(ptsy.size());
+          for (int i=0; i<ptsy.size(); i++) {
+              ptsy2[i] = ptsy[i];
+          }
+
+          auto coeffs = polyfit(ptsx2, ptsy2, 2);
+
+          // TODO: calculate the cross track error
+          double cte = polyeval(coeffs, px) - py;
+          // TODO: calculate the orientation error
+          double epsi = psi - atan(coeffs[1]);
+
           /*
           * TODO: Calculate steering angle and throttle using MPC.
           *
@@ -100,6 +117,24 @@ int main() {
           */
           double steer_value;
           double throttle_value;
+
+          Eigen::VectorXd state(6);
+          state[0] = px;
+          state[1] = py;
+          state[2] = psi;
+          state[3] = v;
+          state[4] = cte;
+          state[5] = epsi;
+
+          auto res = mpc.Solve(state, coeffs);
+
+          steer_value  = res[0];
+          throttle_value = res[1];
+
+          if (steer_value < -1.0) steer_value = -1.0;
+          if (steer_value > 1.0) steer_value = 1.0;
+          if (throttle_value < -1.0) throttle_value = -1.0;
+          if (throttle_value > 1.0) throttle_value = 1.0;
 
           json msgJson;
           // NOTE: Remember to divide by deg2rad(25) before you send the steering value back.
@@ -110,6 +145,13 @@ int main() {
           //Display the MPC predicted trajectory 
           vector<double> mpc_x_vals;
           vector<double> mpc_y_vals;
+
+          mpc_x_vals.push_back(res[2] - px);
+          mpc_y_vals.push_back(res[3] - py);
+          mpc_x_vals.push_back(res[4] - px);
+          mpc_y_vals.push_back(res[5] - py);
+
+          cout<<res[2]<<" "<<res[3]<<" "<<res[4]<<" "<<res[5]<<endl;
 
           //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
           // the points in the simulator are connected by a Green line
