@@ -40,7 +40,7 @@ Self-Driving Car Engineer Nanodegree Program
 
 ## Model
 
-The state of the car is composed, first of all, by the position (x, y) and the orientation of the car psi. Additionally, we need the velocity v. Also, we need to consider the error in the state, cte, which is the distance of the vehicle from the trajectory, and epsi, which is the difference of the vehicle orientation and trajectory orientation.
+The state of the car is composed of, first of all, the position (x, y) and the orientation of the car, psi. Additionally, we need the velocity v. Also, we need to consider the error in the state, cte, which is the distance of the vehicle from the trajectory, and epsi, which is the difference of the vehicle orientation and trajectory orientation.
 
 There are two actuators, the throttle and the steering of the vehicle, with which we can control the velocity and orientation.
 
@@ -64,7 +64,7 @@ where deltat is the steering and a is the throttle.
 
 I've used a value of n equal to 10 and a timestep of 0.1, which gives a duration of 1 second. To see how these values affect the result, let's modify each one, and see how the simulation behaves.
 
-First, if we increase the value of N to, for example, 50, we get a duration of 5 s, which is too large and the vehicle becomes instable, and quickly gets out of the road. If we now reduce the timestep to mantain the same duration, we have too many points, and it becames unstable, because it takes too much time to solve the solution. On the other hand, if we reduce the timestep, but we mantain N equal to 10, the duration is too short and the vehicle cannot react in time, it takes too much time to actuate to the enviroment.
+First, if we increase the value of N to, for example, 50, we get a duration of 5 s, which is too large and the vehicle becomes instable, and quickly gets out of the road. If we now reduce the timestep to mantain the same duration, we have too many points, and it becames unstable, because it takes too much time to solve the solution. On the other hand, if we reduce the timestep, but we mantain N equal to 10, the duration is too short and the vehicle cannot react in time, it takes too much time to act according to the changes in the road. The effect of this is similar of what we find if we choose a timestep smaller than the latency, as we will see later.
 
 ## Polynomial Fitting and MPC Preprocessing
 
@@ -75,10 +75,10 @@ Before the MPC procedure, I transform the global coordinates to local coordinate
 	x_i = dx_i * cos(-psi) - dy_i * sin(-psi)
     y_i = dx_i * sin(-psi) + dy_i * cos(-psi)
 
-	where pts are the waypoints, (px, py, psi) is the state of the vehicle, and (x, y) are the waypoints in the local coordinate frame.
+where pts are the waypoints, (px, py, psi) is the state of the vehicle, and (x, y) are the waypoints in the local coordinate frame.
 
 ## Model Predictive Control with Latency
 
-First of all, to be able to take into account the latency, we can use a timestep bigger than the latency, which works well.
+First of all, to be able to take into account the latency, we can use a timestep bigger than the latency, which works quite well.
 
 Another possible solution is to use the equations of the evolution of the state, and calculate the position after a time equal to the latency, but I couldn't make this approach work, the vehicle started turn left and right alternatively, until it goes off the road.
