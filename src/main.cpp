@@ -101,7 +101,7 @@ int main() {
               ptsy2[i] = dx * sin(-psi) + dy * cos(-psi);
           }
 
-          auto coeffs = polyfit(ptsx2, ptsy2, 3);
+          auto coeffs = polyfit(ptsx2, ptsy2, 4);
 
           // TODO: calculate the cross track error
           double cte = polyeval(coeffs, 0);
@@ -117,10 +117,28 @@ int main() {
           double steer_value;
           double throttle_value;
 
+          double latency = 0.1;
+          double Lf = 2.67;
+
+          double delta = j[1]["steering_angle"];
+          double a = j[1]["throttle"];
+
+          px = 0;
+          py = 0;
+          psi = 0;
+          v *= 0.44704;
+          psi = -delta;
+          px = px + v*cos(psi)*latency;
+          py = py + v*sin(psi)*latency;
+          cte= cte + v*sin(epsi)*latency;
+          epsi = epsi - v*delta*latency/Lf;
+          psi = psi - v*delta*latency/Lf;
+          v = v + a*latency;
+
           Eigen::VectorXd state(6);
-          state[0] = 0;
-          state[1] = 0;
-          state[2] = 0;
+          state[0] = px;
+          state[1] = py;
+          state[2] = psi;
           state[3] = v;
           state[4] = cte;
           state[5] = epsi;
@@ -129,11 +147,6 @@ int main() {
 
           steer_value  = res[0];
           throttle_value = res[1];
-
-          if (steer_value < -1.0) steer_value = -1.0;
-          if (steer_value > 1.0) steer_value = 1.0;
-          if (throttle_value < -1.0) throttle_value = -1.0;
-          if (throttle_value > 1.0) throttle_value = 1.0;
 
           steer_value  /= deg2rad(25);
 

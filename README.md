@@ -62,9 +62,9 @@ where deltat is the steering and a is the throttle.
 
 ## Timestep length and elapsed duration
 
-I've used a value of n equal to 10 and a timestep of 0.1, which gives a duration of 1 second. To see how these values affect the result, let's modify each one, and see how the simulation behaves.
+I've used a value of n equal to 50 and a timestep of 0.05, which gives a duration of 2.5 second. To see how these values affect the result, let's modify each one, and see how the simulation behaves.
 
-First, if we increase the value of N to, for example, 50, we get a duration of 5 s, which is too large and the vehicle becomes instable, and quickly gets out of the road. If we now reduce the timestep to mantain the same duration, we have too many points, and it becames unstable, because it takes too much time to solve the solution. On the other hand, if we reduce the timestep, but we mantain N equal to 10, the duration is too short and the vehicle cannot react in time, it takes too much time to act according to the changes in the road. The effect of this is similar of what we find if we choose a timestep smaller than the latency, as we will see later.
+First, if we increase the value of N to, for example, 100, we get a duration of 5 s, which is too large and the vehicle becomes instable, and quickly gets out of the road. This is due to two reasons, because the duration is large, but also, because the calculations take too much time, and the car cannot react in time. If we now reduce the timestep to mantain the same duration, we have too many points, and it becames unstable, because it takes too much time to solve the solution too. On the other hand, if we reduce the timestep, but we mantain N equal to 50, the duration is too short and the vehicle cannot react in time, it takes too much time to act according to the changes in the road. The effect of this is similar of what we find if we choose a timestep smaller than the latency, as we will see later.
 
 ## Polynomial Fitting and MPC Preprocessing
 
@@ -81,4 +81,16 @@ where pts are the waypoints, (px, py, psi) is the state of the vehicle, and (x, 
 
 First of all, to be able to take into account the latency, we can use a timestep bigger than the latency, which works quite well.
 
-Another possible solution is to use the equations of the evolution of the state, and calculate the position after a time equal to the latency, but I couldn't make this approach work, the vehicle started turn left and right alternatively, until it goes off the road.
+Another possible solution is to use the equations of the evolution of the state, and calculate the position after a time equal to the latency. Because psi is equal to zero in the local reference frame, we use the steering angle, and the equations are:
+
+	psi = -delta (the steering angle)
+	px = px + v * cos(psi)*latency
+	py = py + v * sin(psi)*latency
+	cte = cte + v*sin(epsi)*latency
+	epsi = epsi - v*delta*latency/Lf (we need to multiply delta by -1)
+	psi = psi - v*delta*latency/Lf
+	v = v + a*latency
+
+(the order of the quations is important, because we need to use psi and v before updating them)
+
+With this equations we take into account the latency, because we predict the state of the vehicle in the instant we are going to solve.

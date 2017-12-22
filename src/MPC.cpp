@@ -6,8 +6,8 @@
 using CppAD::AD;
 
 // TODO: Set the timestep length and duration
-size_t N = 10;
-double dt = 0.1;
+size_t N = 50;
+double dt = 0.05;
 double ref_v = 60;
 
 int x_start;
@@ -47,20 +47,20 @@ class FG_eval {
       fg[0] = 0.0;
 
       for (int t = 0; t < N; t++) {
-        fg[0] += 10*CppAD::pow(vars[cte_start + t], 2);
-        fg[0] += 10*CppAD::pow(vars[epsi_start + t], 2);
+        fg[0] += 5*CppAD::pow(vars[cte_start + t], 2);
+        fg[0] += 5*CppAD::pow(vars[epsi_start + t], 2);
         fg[0] += 0.01*CppAD::pow(vars[v_start + t] - ref_v, 2);
       }
 
       // Minimize the use of actuators.
       for (int t = 0; t < N - 1; t++) {
-        fg[0] += 1000*CppAD::pow(vars[delta_start + t], 2);
+        fg[0] += 10*CppAD::pow(vars[delta_start + t], 2);
         fg[0] += CppAD::pow(vars[a_start + t], 2);
-        fg[0] += CppAD::pow(vars[delta_start + t] * vars[v_start+t], 2);
+        fg[0] += 10*CppAD::pow(vars[delta_start + t] * vars[v_start+t], 2);
       }
 
       for (int t = 0; t < N - 2; t++) {
-        fg[0] += 100*CppAD::pow(vars[delta_start + t + 1] - vars[delta_start + t], 2);
+        fg[0] += 10*CppAD::pow(vars[delta_start + t + 1] - vars[delta_start + t], 2);
         fg[0] += CppAD::pow(vars[a_start + t + 1] - vars[a_start + t], 2);
       }
 
@@ -134,7 +134,7 @@ class FG_eval {
         AD<double> x0 = vars[x_start + t - 1];
         AD<double> y0 = vars[y_start + t - 1];
         AD<double> v0 = vars[v_start + t - 1];
-        AD<double> f0 = coeffs[0] + coeffs[1] * x0;
+        AD<double> f0 = coeffs[0] + coeffs[1] * x0 + coeffs[2] * x0 * x0 + coeffs[3] * x0 * x0 * x0;
         AD<double> epsi0 = vars[epsi_start + t - 1];
 
         // y at time t+1
@@ -150,17 +150,16 @@ class FG_eval {
         AD<double> x0 = vars[x_start + t - 1];
         AD<double> y0 = vars[y_start + t - 1];
         AD<double> v0 = vars[v_start + t - 1];
-        AD<double> f0 = coeffs[0] + coeffs[1] * x0;
         AD<double> epsi0 = vars[epsi_start + t - 1];
         AD<double> psi0 = vars[psi_start + t - 1];
         AD<double> delta0 = vars[delta_start + t - 1];
-        AD<double> psides0 = CppAD::atan(coeffs[1]);
+        AD<double> psides0 = CppAD::atan(coeffs[1] + 2 * x0 * coeffs[2] + 3 * x0 * x0 * coeffs[3]);
 
         // y at time t+1
         AD<double> epsi1 = vars[epsi_start + t];
 
         // how psi changes
-        fg[1 + epsi_start + t] = epsi1 - (psi0 - psides0 + (v0*delta0/Lf*dt));
+        fg[1 + epsi_start + t] = epsi1 - (psi0 - psides0 - (v0*delta0/Lf*dt));
       }
   }
 };
@@ -192,15 +191,12 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   double cte = state[4];
   double epsi = state[5];
 
-  double delta = coeffs[0];
-  double a = coeffs[1];
-
   // TODO: Set the number of model variables (includes both states and inputs).
   // For example: If the state is a 4 element vector, the actuators is a 2
   // element vector and there are 10 timesteps. The number of variables is:
   //
   // 4 * 10 + 2 * 9
-  size_t n_vars = N*state.size() + (N-1)*coeffs.size();
+  size_t n_vars = N*state.size() + (N-1)*2;
 
   // TODO: Set the number of constraints
   size_t n_constraints = N*state.size();

@@ -79,6 +79,6 @@ where pts are the waypoints, (px, py, psi) is the state of the vehicle, and (x, 
 
 ## Model Predictive Control with Latency
 
-First of all, to be able to take into account the latency, we can use a timestep bigger than the latency, which works well.
+First of all, to be able to take into account the latency, we can use a timestep bigger than the latency, which works quite well.
 
 Another possible solution is to use the equations of the evolution of the state, and calculate the position after a time equal to the latency, but I couldn't make this approach work, the vehicle started turn left and right alternatively, until it goes off the road.
