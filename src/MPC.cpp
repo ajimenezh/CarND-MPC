@@ -6,9 +6,9 @@
 using CppAD::AD;
 
 // TODO: Set the timestep length and duration
-size_t N = 50;
-double dt = 0.05;
-double ref_v = 60;
+size_t N = 20;
+double dt = 0.1;
+double ref_v = 60*0.44704;
 
 int x_start;
 int y_start;
@@ -47,16 +47,16 @@ class FG_eval {
       fg[0] = 0.0;
 
       for (int t = 0; t < N; t++) {
-        fg[0] += 5*CppAD::pow(vars[cte_start + t], 2);
-        fg[0] += 5*CppAD::pow(vars[epsi_start + t], 2);
-        fg[0] += 0.01*CppAD::pow(vars[v_start + t] - ref_v, 2);
+        fg[0] += 20*CppAD::pow(vars[cte_start + t], 2);
+        fg[0] += 2*CppAD::pow(vars[epsi_start + t], 2);
+        fg[0] += 0.1*CppAD::pow(vars[v_start + t] - ref_v, 2);
       }
 
       // Minimize the use of actuators.
       for (int t = 0; t < N - 1; t++) {
-        fg[0] += 10*CppAD::pow(vars[delta_start + t], 2);
-        fg[0] += CppAD::pow(vars[a_start + t], 2);
-        fg[0] += 10*CppAD::pow(vars[delta_start + t] * vars[v_start+t], 2);
+        fg[0] += 20*CppAD::pow(vars[delta_start + t], 2);
+        fg[0] += 0.5*CppAD::pow(vars[a_start + t], 2);
+        fg[0] += 20*CppAD::pow(vars[delta_start + t] * vars[v_start+t], 2);
       }
 
       for (int t = 0; t < N - 2; t++) {

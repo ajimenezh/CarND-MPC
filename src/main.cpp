@@ -106,7 +106,7 @@ int main() {
           // TODO: calculate the cross track error
           double cte = polyeval(coeffs, 0);
           // TODO: calculate the orientation error
-          double epsi = atan(coeffs[1]);
+          double epsi = - atan(coeffs[1]);
 
           /*
           * TODO: Calculate steering angle and throttle using MPC.
@@ -127,7 +127,6 @@ int main() {
           py = 0;
           psi = 0;
           v *= 0.44704;
-          psi = -delta;
           px = px + v*cos(psi)*latency;
           py = py + v*sin(psi)*latency;
           cte= cte + v*sin(epsi)*latency;
